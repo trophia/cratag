@@ -494,46 +494,6 @@ public:
       }
    }
 
-   void PosCheckBath(void)
-   {
-      //An array of 5 min by 5 min cells around NZ specifying depth
-      //160E to 185e (175W) = 25*12 = 300 cells
-      //-30S to -55S = 25 * 12 = 300 cells
-      float bath[300][300];
-
-      //Read in bathymettry data and classify cells as valid or not
-      std::ifstream bathy("../Data/Tag/nzbath.dat");
-      double lat,lon,depth;
-      cout<<"Classifying cells based on bathymettry\n";
-      while(bathy>>lon>>lat>>depth){
-         //Calculate cell number
-         int x = floor((lon-160)/0.0833);
-         int y = floor((-lat-30)/0.0833);
-         if(x>=0 && x<300 && y>=0 && y<300)
-            bath[x][y] = depth;
-      }
-
-      cout<<"Checking records for valid position\n";
-      for(iterator i=begin();i!=end();i++){
-         if(i->Lon!=Missing && i->Lat!=Missing){
-            //Calculate cell number
-            int x;
-            if(i->Lon>0)//eastern hemisphere
-               x = floor((i->Lon-160)/0.0833);
-            else//western hemisphere
-               x = floor((i->Lon+360-160)/0.0833);
-            int y = floor((-(i->Lat)-30)/0.0833);
-            //If in range of cells then check record depth
-            if(x>=0 && x<300 && y>=0 && y<300)
-               i->Bath = bath[x][y];
-            else
-               i->Bath = -4000;
-         }
-         else
-            i->Bath = -4000;
-      }
-   }
-
    void Process(void)
    {
       AssignCodes();
