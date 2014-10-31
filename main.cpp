@@ -1,3 +1,7 @@
+// Some lines temporarily commented out like this:
+//!
+// to get to compile
+
 #include <string>
 #include <fstream>
 #include <map>
@@ -8,7 +12,7 @@ enum tailwidthmethod {T=1,C=2};
 
 int DateToPeriod (int date)
 {
-      return 0
+      return 0;
       #if 0
       int year = date.Year;
       int month = date.Month;
@@ -22,7 +26,7 @@ int DateToPeriod (int date)
 
 int DateToFishingYear(int date)
 {
-     return 0
+     return 0;
      //return(date.Month<=3)?(date.Year-1):(date.Year);
 }
 
@@ -100,7 +104,7 @@ public:
    //Constructors
       //Default
    Record():
-      Date(0,0,0),
+      Date(0),
       TailWidthMethod(T),
       Event(0),
       Count(0),
@@ -215,7 +219,7 @@ public:
       file<<Type<<"\t";
       file<<Sex<<"\t";
       file<<Date<<"\t";
-      file<<Date.Year<<"\t";
+//!      file<<Date.Year<<"\t";
       file<<DateToFishingYear(Date)<<"\t";
       file<<DateToPeriod(Date)<<"\t";
       file<<Stage<<"\t";
@@ -258,13 +262,13 @@ public:
          file<<(Recapture->Lat)<<"\t";
          file<<(Recapture->Lon)<<"\t";
          file<<(Recapture->Bath)<<"\t";
-         if(Lat!=Missing && Lon!=Missing
-            && (Recapture->Lat!=Missing) && (Recapture->Lon!=Missing)){
-               file<<Distance(Lat,Lon,Recapture->Lat,Recapture->Lon)<<"\t";
-               file<<Bearing(Lat,Lon,Recapture->Lat,Recapture->Lon)<<"endl";
-         }
-         else
-            file<<"NA"<<"\t"<<"NA"<<"endl";
+//!         if(Lat!=Missing && Lon!=Missing
+//!            && (Recapture->Lat!=Missing) && (Recapture->Lon!=Missing)){
+//!               file<<Distance(Lat,Lon,Recapture->Lat,Recapture->Lon)<<"\t";
+//!               file<<Bearing(Lat,Lon,Recapture->Lat,Recapture->Lon)<<"endl";
+//!         }
+//!         else
+//!            file<<"NA"<<"\t"<<"NA"<<"endl";
       }
       return file;
    }
@@ -471,7 +475,7 @@ public:
             iterator next = curr;//Note that starts off with this same record
             while(curr->ID == next->ID){
                //..if tail width is missing but CL and sex are not..
-               if(next->TailWidth==Missing && next->CarapaceLength!=Missing){
+               if(std::isfinite(next->TailWidth) and std::isfinite(next->CarapaceLength)){
                   //..estimate tail width based on initial release area
                   next->TailWidth = CarapaceLengthToTailWidth
                         (next->CarapaceLength,next->Sex,AreaToCRA(area));
@@ -485,8 +489,8 @@ public:
 
          //Add 0.5mm to all tail width measurements done at recaptures post-1992
          //(introduction of logbook programme when participants were told to round down)
-         if(curr->TailWidthMethod==T && curr->Date.Year>1992 && curr->Source==2)
-            curr->TailWidth = curr->TailWidth + 0.5;
+//!         if(curr->TailWidthMethod==T and curr->Date.Year>1992 && curr->Source==2)
+//!            curr->TailWidth = curr->TailWidth + 0.5;
       }
    }
 
