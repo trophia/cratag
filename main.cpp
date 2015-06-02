@@ -1,8 +1,12 @@
-// Some lines temporarily commented out like this:
-//!
-// to get to compile
+/**
+ * Code for processing New Zealand rock lobster tag release-recapture data
+ * for input into stock assessments.
+ *
+ * Please see the associated README.md file
+ */
 
 #include <string>
+#include <iostream>
 #include <fstream>
 #include <map>
 #include <vector>
@@ -10,30 +14,41 @@
 
 enum tailwidthmethod {T=1,C=2};
 
+#warning "Date functions need to be implemented"
+// These date functions originally used a date class (with `Year`, `Month` etc member)
+// These are currently not reimplemented and simply return 0 which will obviously produce
+// nonsense output
+
 int DateToPeriod (int date)
 {
-      return 0;
-      #if 0
-      int year = date.Year;
-      int month = date.Month;
-      int season;
-      if(month<=3) season = 0;
-      else if(month>=4 && month<=9) season = 1;
-      else season = 2;
-      return (year-1945)*2 + season;
-      #endif
+    return 0;
+    #if 0
+    int year = date.Year;
+    int month = date.Month;
+    int season;
+    if(month<=3) season = 0;
+    else if(month>=4 && month<=9) season = 1;
+    else season = 2;
+    return (year-1945)*2 + season;
+    #endif
+}
+
+int DateToCalendarYear(int date)
+{
+    return 0;
+    //return date.Year;
 }
 
 int DateToFishingYear(int date)
 {
-     return 0;
-     //return(date.Month<=3)?(date.Year-1):(date.Year);
+    return 0;
+    //return(date.Month<=3)?(date.Year-1):(date.Year);
 }
 
-   
+
 int PeriodToFishingYear(int period)
 {
-	return 1945+std::floor((period-1)/2);
+    return 1945+std::floor((period-1)/2);
 }
      
 int AreaToCRA(int area)
@@ -121,6 +136,8 @@ public:
       double lat, lon;
       std::string stage, stagemethod, lonhemi;
 
+      #warning "Date format in input file not currently defined"
+
       //Read in attributes
       file>>Project>>Type>>Tag>>Date;
       file>>area>>lat>>lon>>lonhemi;
@@ -176,7 +193,7 @@ public:
 
       //Convert stage to a consistent Stage code dependent on StageMethod
       if(Sex == 1) Stage = 1;
-      else if(stage == "IF" || stage == "2") Stage = 2; //! This conversion needs to be checked
+      else if(stage == "IF" || stage == "2") Stage = 2;
       else if(stage == "MF" || stage == "3") Stage = 3;
       else if(stage == "BF" || stage == "4") Stage = 4;
       else if(stage == "5") Stage = 5;
@@ -219,7 +236,7 @@ public:
       file<<Type<<"\t";
       file<<Sex<<"\t";
       file<<Date<<"\t";
-//!      file<<Date.Year<<"\t";
+      file<<DateToCalendarYear(Date)<<"\t";
       file<<DateToFishingYear(Date)<<"\t";
       file<<DateToPeriod(Date)<<"\t";
       file<<Stage<<"\t";
@@ -261,14 +278,21 @@ public:
          file<<Bath<<"\t";
          file<<(Recapture->Lat)<<"\t";
          file<<(Recapture->Lon)<<"\t";
-         file<<(Recapture->Bath)<<"\t";
-//!         if(Lat!=Missing && Lon!=Missing
-//!            && (Recapture->Lat!=Missing) && (Recapture->Lon!=Missing)){
-//!               file<<Distance(Lat,Lon,Recapture->Lat,Recapture->Lon)<<"\t";
-//!               file<<Bearing(Lat,Lon,Recapture->Lat,Recapture->Lon)<<"endl";
-//!         }
-//!         else
-//!            file<<"NA"<<"\t"<<"NA"<<"endl";
+         file<<(Recapture->Bath)<<"\n";
+
+         // The following code calculates a bearing and distance travelled
+         // The `Distance` and `Bearing` functions were from an external library
+         // They could be replicated fairly easily but are curently not because these values are not
+         // used for the assessment
+         #if 0
+         if(Lat!=Missing && Lon!=Missing
+            && (Recapture->Lat!=Missing) && (Recapture->Lon!=Missing)){
+               file<<Distance(Lat,Lon,Recapture->Lat,Recapture->Lon)<<"\t";
+               file<<Bearing(Lat,Lon,Recapture->Lat,Recapture->Lon)<<"\n";
+         }
+         else
+            file<<"NA"<<"\t"<<"NA"<<"\n";
+         #endif
       }
       return file;
    }
@@ -314,7 +338,7 @@ public:
             <<TailWidth<<"\t"
             <<(Recapture->TailWidth)<<"\t"
             <<DateToPeriod(Date)<<"\t"
-            <<DateToPeriod(Recapture->Date)<<"endl";
+            <<DateToPeriod(Recapture->Date)<<"\n";
       }
       return file;
    }
@@ -322,7 +346,7 @@ public:
    //Writes in the lob01 model format to a file given a cra area
    std::ofstream& lob01Write(std::ofstream& file,std::map<std::string,int>& typekey, int cra)
    {
-	if(lob01Valid(cra)){
+    if(lob01Valid(cra)){
             file<<Event<<"\t"
                <<Sex<<"\t"
                <<DateToPeriod(Date)<<"\t"
@@ -334,7 +358,7 @@ public:
                <<Condition<<"\t"
                <<typekey[Type]<<"\t"
                <<1<<"\t" //Dummy column
-               <<"endl";
+               <<"\n";
       }
       return file;
    }
@@ -353,7 +377,7 @@ public:
                <<Condition<<"\t"
                <<typekey[Type]<<"\t"
                <<1<<"\t" //Dummy column
-               <<"endl";
+               <<"\n";
       return file;
    }
 
@@ -370,7 +394,7 @@ public:
                <<Condition<<"\t"
                <<typekey[Type]<<"\t"
                <<(Recapture->Area)<<"\t" //Dummy column is now recapture area
-               <<"endl";
+               <<"\n";
       return file;
    }
 
@@ -400,6 +424,16 @@ public:
    //Number of unique IDs
    int Unique;
 
+   //Read from file
+   void Read(const std::string& filename)
+   {
+        std::ifstream file(filename);
+        while(file.good()){
+            Record record;
+            record.Read(file);
+        }
+   }
+
    //Create a numeric for a combination of ID and Date and create key
    //for tag type
    void AssignCodes(void)
@@ -410,8 +444,8 @@ public:
          //..give event number and increment
          i->Event = event++;
          //..add tag type to key
-         if(!TypeKey.Present(i->Type))
-            TypeKey[i->Type] = TypeKey.Size() + 1;
+         if(TypeKey.find(i->Type)==TypeKey.end())
+            TypeKey[i->Type] = TypeKey.size() + 1;
       }
    }
 
@@ -444,7 +478,7 @@ public:
       //Loop through all records...
       for(iterator curr=begin();curr!=end();curr++){
          //..if this record is not in the exclude list
-         if(Excludes.Present(curr->ID)==false){
+         if(Excludes.find(curr->ID)==Excludes.end()){
             iterator next = curr; next++;
             //..if the next tag is the same as the current one
             if(next!=end()){
@@ -489,8 +523,8 @@ public:
 
          //Add 0.5mm to all tail width measurements done at recaptures post-1992
          //(introduction of logbook programme when participants were told to round down)
-//!         if(curr->TailWidthMethod==T and curr->Date.Year>1992 && curr->Source==2)
-//!            curr->TailWidth = curr->TailWidth + 0.5;
+         if(curr->TailWidthMethod==T and DateToCalendarYear(curr->Date)>1992 && curr->Source==2)
+            curr->TailWidth = curr->TailWidth + 0.5;
       }
    }
 
@@ -504,20 +538,18 @@ public:
 
    void ReleasesWrite(std::ofstream& file)
    {
-      file.Labels = false;
       file<<"Event\tID\tProject\tTagType\tSex\tDateRel\tYearRel\tFYRel\tPeriodRel\tStageRel\t"
          <<"CondRel\tTWRel\tTWMethRel\tAreaRel\tLatRel\tLonRel\n";
       for(iterator i=begin();i!=end();i++){
           if(i->Count == 0){
                i->Write(file);
-               file<<"endl";
+               file<<"\n";
           }
       }
    }
 
    void LibertyWrite(std::ofstream& file)
    {
-      file.Labels = false;
       file<<"#Event\tID\tProject\tTagType\tSex\tDateRel\tDateRec\tDaysLib\tPeriodRel\t"
          <<"PeriodRec\tCountRel\tCountRec\tStageRel\tStageRec\tCondRel\tCondRec\t"
          <<"TWRel\tTWMethRel\tTWRec\tTWMethRec\tAreaRel\tAreaRec\tDepthRel\tDepthRec\t"
@@ -564,24 +596,24 @@ public:
    void lob00Write(std::ofstream& file, int cra)
    {
       //Header
-      file<<"#CRA"<<cra<<" tag release-recapures. Produced "<<Now.Asstd::string()<<"endl";
+      file<<"#CRA"<<cra<<" tag release-recapures.\n";
       //Number of rows
-      file<<"#Number\n"<<lob00Number(cra)<<"endl";
+      file<<"#Number\n"<<lob00Number(cra)<<"\n";
       //Recaptures
       file<<"#Sex\tTWRel\tTWRec\tPeriodRel\tPeriodRec\n";
       for(iterator i=begin();i!=end();i++) i->lob00Write(file,cra);
       //Test code - repeat area number 4 time
-      file<<"#Test\n"<<cra<<cra<<cra<<cra<<"endl";
+      file<<"#Test\n"<<cra<<cra<<cra<<cra<<"\n";
    }
 
    void lob01Write(std::ofstream& file, int cra, int max=1e6)
    {
       //Header
-      file<<"#CRA"<<cra<<" tag release-recapures. Produced "<<Now.Asstd::string()<<"endl";
+      file<<"#CRA"<<cra<<" tag release-recapures.\n";
       //Number of rows
       int records = lob01Number(cra);
       int number = records<max?records:max;
-      file<<"#Number\n"<<number<<"endl";
+      file<<"#Number\n"<<number<<"\n";
       //Recaptures
       file<<"#Event\tSex\tPeriodRel\tPeriodRec\tTWRel\tTWRec\tRelease\tArea\tCondition\tType\tDummy\n";
       int count=0;
@@ -592,16 +624,16 @@ public:
        }
       }
       //Test code - repeat area number 4 times
-      file<<"#Test\n"<<cra<<cra<<cra<<cra<<"endl";
+      file<<"#Test\n"<<cra<<cra<<cra<<cra<<"\n";
    }
    
    void lob02Write(std::ofstream& file)
    {
       //Header
-      file<<"#CRA 1 & 2 tag release-recapures. Produced "<<Now.Asstd::string()<<"endl";
+      file<<"#CRA 1 & 2 tag release-recapures.\n";
       //Number of rows
       int number = lob02Number();
-      file<<"#Number\n"<<number<<"endl";
+      file<<"#Number\n"<<number<<"\n";
       //Recaptures
       file<<"#Event\tSex\tPeriodRel\tPeriodRec\tTWRel\tTWRec\tRelease\tArea\tCondition\tType\tDummy\n";
       int count=0;
@@ -618,10 +650,10 @@ public:
    void lob02bWrite(std::ofstream& file, int cra)
    {
       //Header
-      file<<"#CRA"<<cra<<"tag release-recapures. Produced "<<Now.Asstd::string()<<"endl";
+      file<<"#CRA"<<cra<<"tag release-recapures.\n";
       //Number of rows
       int number = lob02bNumber(cra);
-      file<<"#Number\n"<<number<<"endl";
+      file<<"#Number\n"<<number<<"\n";
       //Recaptures
       file<<"#Event\tSex\tPeriodRel\tPeriodRec\tTWRel\tTWRec\tRelease\tArea\tCondition\tType\tDummy\n";
       int count=0;
@@ -638,39 +670,39 @@ public:
 };//class Records
 
 int main(int argc, char* argv[]){
-	Records tags;
+    Records tags;
 
-	//Read from data file
-	std::cout<<"Reading tags\n";
-	tags.Read("Records.txt");
+    //Read from data file
+    std::cout<<"Reading tags\n";
+    tags.Read("Records.txt");
 
-	//Assign event number and tag type key
-	std::cout<<"AssignCodes\n";
-	tags.AssignCodes();
+    //Assign event number and tag type key
+    std::cout<<"AssignCodes\n";
+    tags.AssignCodes();
 
-	//Process the tags
-	std::cout<<"Processing tags\n";
-	tags.Process();
+    //Process the tags
+    std::cout<<"Processing tags\n";
+    tags.Process();
 
-	//Ouput inital releases
-	std::cout<<"Releases output\n";
-	std::ofstream releases("releases.dat");
-	tags.ReleasesWrite(releases);
+    //Ouput inital releases
+    std::cout<<"Releases output\n";
+    std::ofstream releases("releases.dat");
+    tags.ReleasesWrite(releases);
 
-	//Output to lob file
-	std::cout<<"lob output\n";
-	std::ofstream lobDat("tags.dat");
-	tags.lob02Write(lobDat);
-	
-	//Output excludes
-	std::cout<<"Excludes output\n";
-	std::ofstream excludes("excludes.dat");
-	excludes<<tags.Excludes;
+    //Output to lob file
+    std::cout<<"lob output\n";
+    std::ofstream lobDat("tags.dat");
+    tags.lob02Write(lobDat);
+    
+    //Output excludes
+    std::cout<<"Excludes output\n";
+    std::ofstream excludes("excludes.dat");
+    for(auto pair : tags.Excludes) excludes<<pair.first<<"\t"<<pair.second<<"\n";
 
-	//Output tag
-	std::cout<<"Tag type keys\n";
-	std::ofstream tagkey("tagkey.out");
-	tagkey<<tags.TypeKey;
+    //Output tag types key
+    std::cout<<"Tag type keys\n";
+    std::ofstream tagkey("tagkey.out");
+    for(auto pair : tags.TypeKey) tagkey<<pair.first<<"\t"<<pair.second<<"\n";
 
-	return 0;
+    return 0;
 }
